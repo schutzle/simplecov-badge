@@ -1,16 +1,16 @@
 ImageMagickError = Class.new(StandardError)
-  
-class SimpleCov::Formatter::BadgeFormatter  
+
+class SimpleCov::Formatter::BadgeFormatter
   # Set up config variables.
   options = {:badge_title => 'TEST COVERAGE', :generate_groups => true, :timestamp => false, :green => '#4fb151',
-            :yellow => '#ded443', :red => '#a23e3f', :number_font => 'Helvetica-Narrow-Bold',
+            :yellow => '#ded443', :red => '#a23e3f', :number_font => 'Helvetica',
             :number_font_size => 20, :name_font => 'Helvetica', :name_font_size => 17,
             :badge_height => 27, :strength_foreground => false,
-            :group_number_font => 'Helvetica-Narrow-Bold', :group_number_font_size => 18,
+            :group_number_font => 'Helvetica', :group_number_font_size => 18,
             :group_name_font => 'Helvetica-Bold', :group_name_font_size => 15,
             :group_badge_height => 22, :group_strength_foreground => false, :color_code_title => true,
             :group_color_code_title => true}
-    
+
   # set up class variables and getters/setters
   options.each do |opt,v|
     set = "@@#{opt} = v"
@@ -20,11 +20,11 @@ class SimpleCov::Formatter::BadgeFormatter
     eval(getter)
     eval(setter)
   end
-  
+
   def initialize(output = nil)
     @output = output || STDOUT
   end
-  
+
   def format(result)
     begin
       check_imagemagick
@@ -39,13 +39,13 @@ class SimpleCov::Formatter::BadgeFormatter
   end
 
   private
-  
+
   def generate_header_badge(result)
     overall_cov = result.source_files.covered_percent.round(0)
     overall_strength = result.covered_strength.round(0)
     generator(overall_cov, overall_strength, false)
   end
-  
+
   def generate_group_badges(result)
     result.groups.each do |name, files|
       cov = files.covered_percent.round(0)
@@ -53,7 +53,7 @@ class SimpleCov::Formatter::BadgeFormatter
       generator(cov, strength, name)
     end
   end
-  
+
   def generator(cov, strength, group)
     command = []
     command[0] = """
@@ -107,6 +107,7 @@ class SimpleCov::Formatter::BadgeFormatter
       command.each_with_index do |cmd, i|
         next i if i == 4 unless group == false
         next i if i == 5 if group == false
+        puts "#{cmd}"
         output = `#{cmd}`
         check_status(output)
       end
@@ -115,7 +116,7 @@ class SimpleCov::Formatter::BadgeFormatter
       system("rm #{output_path}/tmp.png")
     end
   end
-  
+
   def generate_timestamp
     timestamp_cmd = """
       convert #{output_path}/coverage-badge.png -alpha set -bordercolor none -border 3 \
@@ -126,7 +127,7 @@ class SimpleCov::Formatter::BadgeFormatter
     output = `#{timestamp_cmd}`
     check_status(output)
   end
-  
+
   # getter method for config variables - abstracts group or main badge from generator
   def get_config(name, group)
     if group
@@ -135,22 +136,22 @@ class SimpleCov::Formatter::BadgeFormatter
       eval("@@#{name}")
     end
   end
-  
+
   # checks if imagemagick is installed and working
   def check_imagemagick
     output = `convert --version`
     raise ImageMagickError, "ImageMagick doesn't appear to be installed." unless $?.to_i == 0
   end
-  
+
   # Checks exit status after running a command with backtick
   def check_status(output)
     raise ImageMagickError, "ImageMagick exited with an error. It said:\n #{output}" unless $?.to_i == 0
   end
-  
+
   def output_message(result)
     "Coverage badge generated for #{result.command_name} to #{output_path}."
   end
-  
+
   def output_path
     SimpleCov.coverage_path
   end
@@ -168,7 +169,7 @@ class SimpleCov::Formatter::BadgeFormatter
       @@red
     end
   end
-  
+
   def title_foreground(cov, strength, foreground, use)
     if !foreground or !use
       'white'
@@ -180,7 +181,7 @@ class SimpleCov::Formatter::BadgeFormatter
       @@red
     end
   end
-  
+
   def strength_background(strength, foreground)
     if foreground
       'transparent'
@@ -188,7 +189,7 @@ class SimpleCov::Formatter::BadgeFormatter
       strength_color(strength)
     end
   end
-  
+
   def strength_foreground(strength, foreground)
     unless foreground
       'white'
@@ -196,7 +197,7 @@ class SimpleCov::Formatter::BadgeFormatter
       strength_color(strength)
     end
   end
-  
+
   def coverage_color(covered_percent)
     if covered_percent > 90
       @@green
